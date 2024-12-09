@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Pull</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f9;
+        }
+
+        .btn-back {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            background-color: #0078d4;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .btn-back:hover {
+            background-color: #005bb5;
+        }
+    </style>
+</head>
+<body>
+    <div id="data-display">
+        <!-- The user data will be displayed here -->
+    </div>
+    <script>
+        // Parse query string to get the username and email
+        const params = new URLSearchParams(window.location.search);
+        const username = params.get('username');
+        const email = params.get('email');
+
+        // Display user info
+        const displayDiv = document.getElementById('data-display');
+        displayDiv.innerHTML = `
+            <p><strong>Username:</strong> ${username || 'N/A'}</p>
+            <p><strong>Email:</strong> ${email || 'N/A'}</p>
+        `;
+    </script>
+
+    <a href="https://finalproject-dataload.azurewebsites.net/">
+        <button>Add Data</button>
+    </a>
+
+    <h2>Find Energy Consumption of Household</h2>
+    <form id="search-form">
+        <label for="home-id">Please enter your Home ID:</label>
+        <input type="text" id="home-id" name="home_id" required>
+        <button type="submit">Search</button>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Home ID</th>
+                <th>Appliance</th>
+                <th>Energy Consumption (kWh)</th>
+                <th>Usage Duration (minutes)</th>
+            </tr>
+        </thead>
+        <tbody id="results-body">
+        </tbody>
+    </table>
+
+    <script>
+        // Event listener for the form submission
+        document.getElementById('search-form').addEventListener('submit', async function(event) {
+            event.preventDefault(); // Prevent default form submission
+            const homeId = document.getElementById('home-id').value;
+
+            try {
+                // Make a GET request to fetch data based on the home_id
+                const response = await fetch(`/data?home_id=${homeId}`);
+                const data = await response.json();
+
+                const tbody = document.getElementById('results-body');
+                tbody.innerHTML = ''; // Clear previous results
+
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4">No data found for this Home ID.</td></tr>';
+                } else {
+                    data.forEach(row => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${row.home_id}</td>
+                            <td>${row.appliance}</td>
+                            <td>${row.energy_consumption_kWh}</td>
+                            <td>${row.usage_duration_minutes}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                alert('An error occurred while fetching data. Please try again later.');
+            }
+        });
+    </script>
+
+    <!-- Go back button -->
+    <a href="index.html" class="btn-back"><button class="btn-back">Go Back to Index</button></a>
+</body>
+</html>
